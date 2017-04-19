@@ -21,12 +21,11 @@ MINIMUM_NONTRUMP_PERC = 0.4 # DP: if nontrump / total < 40%, print and next user
 
 TRUMP_PATTERN = re.compile(r"(\W|^)trump(\W|$)", re.IGNORECASE)
 MENTIONED_PATTERN = re.compile(r"@(\w+)")
-HASHTAG_PATTERN = re.compile(r"#([^\s]+)")
+HASHTAG_PATTERN = re.compile(r"#(\w+)")
 
 param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
 
 FILE_NAME = "trump_all_dedup"
-# FILE_NAME = "trump_newer_cleaned"
 # FILE_NAME = "trump_sample"
 
 
@@ -116,7 +115,7 @@ def main():
         json.dump(profiles, file, indent=4, separators=(',', ': '))
 
 
-# output:   allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, tweet class), ...], 
+# output:   allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...], 
 #           nontrumpHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
 #           profiles = [(user 1 id, user 1 screen_name, user alignment, user class)]
 
@@ -125,6 +124,9 @@ def pullDummy(userId):
     return ["goofy", [[2, "hello"], [3, "nice to meet you"], [4, "how you doing"], [5, "trump's mad! @mickey"], [6, "#trump"], [7, "I want strumpets"]]]
 
 def pullInfo(userId):
+    sn = ""
+    tweets = []
+    
     try:
         ts = TwitterSearch(
             consumer_key = TWITTER_SECRET['consumer_key'],
@@ -133,9 +135,6 @@ def pullInfo(userId):
             access_token_secret = TWITTER_SECRET['access_token_secret'],
             verify=True
          )
-
-        sn = ""
-        tweets = []
 
         for tweet in ts.search_tweets_iterable(TwitterUserOrder(userId)):
             sn = tweet['user']['screen_name']
