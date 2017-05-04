@@ -5,27 +5,7 @@ import re
 import json
 import os
 import argparse
-
-ELLIPSES = u'\u2026' # UTF-8 for '...' character
-
-UNK = 0 
-PRO = 1 
-ANT = -1
-
-LEFT = 0
-NEUT = 1
-RIGHT = 2
-
-MINIMUM_TWEET_COUNT = 4   # DP: find count in tweets: if total < 100, print and next user
-MINIMUM_NONTRUMP_PERC = 0.4 # DP: if nontrump / total < 40%, print and next user
-MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 1 # DP: let's say hashtag count > 100 is significant
-
-# FILE_NAME = "trump_all_dedup"
-FILE_NAME = "trump_sample"
-
-param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
-
-HASHTAG_FILE_NAME = "classifiedHashtags"
+from snifferCommons import *
 
 
 def main():
@@ -38,20 +18,21 @@ def main():
     parser.add_argument('fileNumber', help="file number if split file, 0 if not")
     args = parser.parse_args()
 
-    global FILE_NAME
+    baseName = FILE_NAME
 
     if int(args.fileNumber) != 0:
-        FILE_NAME += args.fileNumber
+        baseName += args.fileNumber
 
+    trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
 
-    with codecs.open(FILE_NAME + "_trumpTweets" + param + ".txt", "r", "utf-8") as file:
-        allTrumpTweets = json.load(file)
+    with codecs.open(trumpJson, "r", "utf-8") as file:
+        allTrumpTweetLists = json.load(file)
 
-    with codecs.open(FILE_NAME + "_histories" + param + ".txt", "r", "utf-8") as file:
-        nontrumpHistories = json.load(file)
+    with codecs.open(historyJson, "r", "utf-8") as file:
+        nontrumpHistoryLists = json.load(file)
 
-    with codecs.open(FILE_NAME + "_profiles" + param + ".txt", "r", "utf-8") as file:
-        users = json.load(file)
+    with codecs.open(userJson, "r", "utf-8") as file:
+        userLists = json.load(file)
 
 
     # clean up only necessary for first few files
@@ -60,7 +41,6 @@ def main():
     allHashtags = createHashtagDict(allTrumpTweets)
 
     allTrumpTweets = [ primaryAssignment(tweet, allHashtags) for tweet in allTrumpTweets ]
-
     printClassDistribution(allTrumpTweets, "trump tweets")
 
     users = [ userClassAssignment(user, allTrumpTweets) for user in users ]
@@ -78,7 +58,7 @@ def main():
         history = next(y for x, y in nontrumpHistories if x == user[0])[0]
         categorizedHistories.append((user[3], history)) # only user class and nontrump history
 
-    with codecs.open(FILE_NAME + "_dataset" + param + ".txt", "w+", "utf-8") as file:
+    with codecs.open(generateOutputFileName(), "w+", "utf-8") as file:
         json.dump(categorizedHistories, file, indent=4, separators=(',', ': '))
 
 # output: 
@@ -123,7 +103,7 @@ def createHashtagDict(tweets):
             hashtagDict[hashtag][1] = otherDict
 
     # read in currently available assignments from file and assign if possible
-    filename = HASHTAG_FILE_NAME + ".json"
+    filename = HASHTAG_FILE_NAME
     if os.path.isfile(filename):
         with codecs.open(filename, "r", "utf-8") as file:
             classifiedHashtags = json.load(file)

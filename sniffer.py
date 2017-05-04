@@ -1,5 +1,6 @@
 #!/usr/bin/python2.7
 
+from snifferConstants import FRESH_TRUMP_TWEET_SEARCH_FILENAME
 from twitterSecrets import twitterSecrets
 from TwitterSearch import *
 import codecs
@@ -27,7 +28,7 @@ try:
         if queries > 0 and (queries % 5) == 0: # trigger delay every 5th query
             time.sleep(60) # sleep for 60 seconds
 
-    with codecs.open("trump_newer.txt","a+", 'utf-8') as file:
+    with codecs.open(FRESH_TRUMP_TWEET_SEARCH_FILENAME,"a+", 'utf-8') as file:
         for tweet in ts.search_tweets_iterable(tso, callback=queryCallback):
             text = (tweet['text']).replace('\n', ' ')
             print( '@%s tweeted: %s' % (tweet['user']['screen_name'], text) )

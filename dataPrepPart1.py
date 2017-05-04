@@ -11,22 +11,11 @@ import argparse
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
 from twitterSecrets import twitterSecrets
-
-UNK = 0 
-PRO = 1 
-ANT = -1
-
-MINIMUM_TWEET_COUNT = 100   # DP: find count in tweets: if total < 100, print and next user
-MINIMUM_NONTRUMP_PERC = 0.4 # DP: if nontrump / total < 40%, print and next user
+from snifferCommons import *
 
 TRUMP_PATTERN = re.compile(r"(\W|^)trump(\W|$)", re.IGNORECASE)
 MENTIONED_PATTERN = re.compile(r"@(\w+)")
-HASHTAG_PATTERN = re.compile(r"#(\w+)")
-
-param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
-
-FILE_NAME = "trump_all_dedup"
-# FILE_NAME = "trump_sample"
+HASHTAG_PATTERN = re.compile(r"#([\w']+)")
 
 
 def main():
@@ -35,15 +24,15 @@ def main():
     args = parser.parse_args()
 
     global TWITTER_SECRET
-    global FILE_NAME
+    baseName = FILE_NAME
 
     if int(args.fileNumber) != 0:
-        FILE_NAME += args.fileNumber
+        baseName += args.fileNumber
         TWITTER_SECRET = twitterSecrets[(int(args.fileNumber) - 1) % 4]
     else:
         TWITTER_SECRET = twitterSecrets[0]
 
-    with codecs.open(FILE_NAME + ".txt", "r", "utf-8") as file:
+    with codecs.open(baseName + ".txt", "r", "utf-8") as file:
         content = file.readlines()
 
     foundTweets = []
@@ -82,9 +71,16 @@ def main():
 
         for tweet in tweets:
             if isTrumpTweet(tweet):
-                trump.append([ tweet[0], tweet[1], uu, getMentioned(tweet), getHashtags(tweet), UNK ])
+                tweetDict = dict()
+                tweetDict['tweetId'] = tweet['id']
+                tweetDict['text'] = tweet['text']
+                tweetDict['userId'] = uu
+                tweetDict['mentionedScreenNames'] = getMentioned(tweet)
+                tweetDict['hashtags'] = getHashtags(tweet)
+                tweetDict['class'] = UNK
+                trump.append(tweetDict)
             else:
-                nontrump.append(tweet[1])
+                nontrump.append(tweet['text'])
 
         nontrumpLen = len(nontrump)
         nontrumpPerc = nontrumpLen / float(tweetLen)
@@ -93,9 +89,19 @@ def main():
             continue
 
         allTrumpTweets.extend(trump)
-        nontrumpHistories.append([ uu, nontrump ])
+
+        historyDict = dict()
+        historyDict['userId'] = uu
+        historyDict['tweetTexts'] = nontrump
+        nontrumpHistories.append(historyDict)
+
         trumpLen = len(trump)
-        profiles.append([ uu, screenName, [0, trumpLen, 0], UNK ])
+        userDict = dict()
+        userDict['userId'] = uu
+        userDict['screenName'] = screenName
+        userDict['alignment'] = [0, trumpLen, 0]
+        userDict['class'] = UNK
+        profiles.append(userDict)
 
         print "User #", n + 1, "of", foundLen, ":"
         print "ID:", uu
@@ -103,15 +109,15 @@ def main():
         print trumpLen, "trump tweets"
         print nontrumpLen, "nontrump tweets\n"
 
-        time.sleep(30) # include delay between every user
+        time.sleep(15) # include delay between every user
 
-    with codecs.open(FILE_NAME + "_trumpTweets" + param + ".json", "w+", "utf-8") as file:
+    with codecs.open(FILE_NAME + "_trumps" + param + ".json", "w+", "utf-8") as file:
         json.dump(allTrumpTweets, file, indent=4, separators=(',', ': '))
 
-    with codecs.open(FILE_NAME + "_histories" + param + ".json", "w+", "utf-8") as file:
+    with codecs.open(FILE_NAME + "_nontrumps" + param + ".json", "w+", "utf-8") as file:
         json.dump(nontrumpHistories, file, indent=4, separators=(',', ': '))
 
-    with codecs.open(FILE_NAME + "_profiles" + param + ".json", "w+", "utf-8") as file:
+    with codecs.open(FILE_NAME + "_users" + param + ".json", "w+", "utf-8") as file:
         json.dump(profiles, file, indent=4, separators=(',', ': '))
 
 
@@ -121,12 +127,12 @@ def main():
 
 # pull tweet history and screen_name from last 7 days: (screen_name, list of dependent tweet tuple (tweet id, text))
 def pullDummy(userId):
-    return ["goofy", [[2, "hello"], [3, "nice to meet you"], [4, "how you doing"], [5, "trump's mad! @mickey"], [6, "#trump"], [7, "I want strumpets"]]]
+    return "goofy", [{"id":2, "text":"hello"}, {"id":3, "text":"nice to meet you"}, {"id":4, "text":"how you doing"}, {"id":5, "text":"trump's mad! @mickey"}, {"id":6, "text":"#trump"}, {"id":7, "text":"I want strumpets"}]
 
 def pullInfo(userId):
     sn = ""
     tweets = []
-    
+
     try:
         ts = TwitterSearch(
             consumer_key = TWITTER_SECRET['consumer_key'],
@@ -138,7 +144,10 @@ def pullInfo(userId):
 
         for tweet in ts.search_tweets_iterable(TwitterUserOrder(userId)):
             sn = tweet['user']['screen_name']
-            tweets.append([tweet['id'], tweet['text']])
+            tweetDict = dict()
+            tweetDict['id'] = tweet['id']
+            tweetDict['text'] = tweet['text']
+            tweets.append(tweetDict)
 
     except TwitterSearchException as e:
         print(e)
@@ -153,16 +162,16 @@ def queryCallback(current_ts_instance): # accepts ONE argument: an instance of T
 
 # decide if tweet is related to Trump by searching for keyword ".*trump.*" within tweet text
 def isTrumpTweet(tweet):
-    return (re.search(TRUMP_PATTERN, tweet[1]) is not None)
+    return (re.search(TRUMP_PATTERN, tweet["text"]) is not None)
 
 # search tweet text for screen_names by matching with " @([a-zA-Z0-9_]+)" (/1 = screen_name)
 def getMentioned(tweet):
-    return re.findall(MENTIONED_PATTERN, tweet[1])
+    return re.findall(MENTIONED_PATTERN, tweet["text"])
 
 # search tweet text for hashtags
 # disregards those that are cut off
 def getHashtags(tweet):
-    return re.findall(HASHTAG_PATTERN, tweet[1])
+    return re.findall(HASHTAG_PATTERN, tweet["text"])
 
 
 
