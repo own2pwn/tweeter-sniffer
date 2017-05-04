@@ -1,57 +1,59 @@
-#!/usr/bin/python2.7
-
-import codecs
-import re
-import json
-import os
-import argparse
-from snifferCommons import *
-
-
-def main():
-
-#   input:  allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...], 
-#           nontrumpHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
-#           users = [(user 1 id, user 1 screen_name, user alignment, user class)]
-
+ #!/usr/bin/python2.7
+ 
+ import codecs
+ import re
+ import json
+ import os
+ import argparse
+ from snifferCommons import *
+ 
+ 
+ def main():
+ 
+ #   input:  allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...], 
+ #           nontrumpHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
+ #           users = [(user 1 id, user 1 screen_name, user alignment, user class)]
+ 
     parser = argparse.ArgumentParser()
     parser.add_argument('baseFileName', help="enter base name without the extension")
-    args = parser.parse_args()
 
+     args = parser.parse_args()
+ 
     baseName = args.baseFileName
 
+ 
     trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
-
-    with codecs.open(trumpJson, "r", "utf-8") as file:
+ 
+     with codecs.open(trumpJson, "r", "utf-8") as file:
         allTrumpTweets = json.load(file)
-
-    with codecs.open(historyJson, "r", "utf-8") as file:
+ 
+     with codecs.open(historyJson, "r", "utf-8") as file:
         nontrumpHistories = json.load(file)
-
-    with codecs.open(userJson, "r", "utf-8") as file:
+ 
+     with codecs.open(userJson, "r", "utf-8") as file:
         users = json.load(file)
-
-
-    # clean up only necessary for first few files
-    allTrumpTweets = cleanHashtags(allTrumpTweets)
-
-    allHashtags = createHashtagDict(allTrumpTweets)
-
-    allTrumpTweets = [ primaryAssignment(tweet, allHashtags) for tweet in allTrumpTweets ]
-    printClassDistribution(allTrumpTweets, "trump tweets")
-
-    users = [ userClassAssignment(user, allTrumpTweets) for user in users ]
-    printClassDistribution(users, "users")
-
-    allTrumpTweets = [ auxiliaryAssignment(tweet, users) for tweet in allTrumpTweets ]
-    printClassDistribution(allTrumpTweets, "trump tweets")
-
-    users = [ userClassAssignment(user, allTrumpTweets) for user in users ]
-    printClassDistribution(users, "users")
-
-    categorizedHistories = []
-
-    for user in users:
+ 
+ 
+     # clean up only necessary for first few files
+     allTrumpTweets = cleanHashtags(allTrumpTweets)
+ 
+     allHashtags = createHashtagDict(allTrumpTweets)
+ 
+     allTrumpTweets = [ primaryAssignment(tweet, allHashtags) for tweet in allTrumpTweets ]
+     printClassDistribution(allTrumpTweets, "trump tweets")
+ 
+     users = [ userClassAssignment(user, allTrumpTweets) for user in users ]
+     printClassDistribution(users, "users")
+ 
+     allTrumpTweets = [ auxiliaryAssignment(tweet, users) for tweet in allTrumpTweets ]
+     printClassDistribution(allTrumpTweets, "trump tweets")
+ 
+     users = [ userClassAssignment(user, allTrumpTweets) for user in users ]
+     printClassDistribution(users, "users")
+ 
+     categorizedHistories = []
+ 
+     for user in users:
         history = []
         for item in nontrumpHistories:
             if item["userId"] == user["userId"]:
@@ -60,15 +62,15 @@ def main():
         categorizedHistories.append({
             "class": user["class"],
             "tweets": history
-        }) # only user class and nontrump history
-
+       }) # only user class and nontrump history
+ 
     with codecs.open(generateOutputFileName(baseName), "w+", "utf-8") as file:
-        json.dump(categorizedHistories, file, indent=4, separators=(',', ': '))
-
-# output: 
-#   categorizedHistories = [(user 1 class, [tweet 1 text, tweet 2 text, ...]), (user 2 class, [tweet 1 text, ...]), ...]
-
-
+         json.dump(categorizedHistories, file, indent=4, separators=(',', ': '))
+ 
+ # output: 
+ #   categorizedHistories = [(user 1 class, [tweet 1 text, tweet 2 text, ...]), (user 2 class, [tweet 1 text, ...]), ...]
+ 
+ 
 def cleanHashtags(tweets):
     for tweet in tweets:
         hashtags = tweet["hashtags"]
@@ -85,33 +87,33 @@ def cleanHashtags(tweets):
     return tweets
 
 # CHC: maybe consider later doing something with cut-off hashtags?
-def createHashtagDict(tweets):
-    # hashtagDict = {hashtag: (frequency, {other1: joint_frequency, ...}, hashtag class), ...} 
+# create dict that gives hashtags, their frequencies, their joint frequencies with other hashtags, and assigned class 
+ def createHashtagDict(tweets):
+     # hashtagDict = {hashtag: (frequency, {other1: joint_frequency, ...}, hashtag class), ...} 
     hashtagDict = dict()
-    # print "tweets is", tweets
-    for tweet in tweets:
+     for tweet in tweets:
         hashtags = tweet["hashtags"]
-        for i, hashtag in enumerate(hashtags):
-            hashtag = hashtag.lower()
-            if hashtag not in hashtagDict:
+         for i, hashtag in enumerate(hashtags):
+             hashtag = hashtag.lower()
+             if hashtag not in hashtagDict:
                 hashtagDict[hashtag] = {
                     "count": 1,
                     "associatedTags": dict(),
                     "alignment": list(),
                     "class": NEUT
                 }
-            else:
+             else:
                 hashtagDict[hashtag]["count"] += 1
             others = hashtags[:i] + hashtags[(i + 1):] # take the list of other hashtags
             otherDict = hashtagDict[hashtag]["associatedTags"]
             for other in others: 
                 if other not in otherDict: # add other hashtags to associated hashtags or increment
-                    otherDict[other] = 1
-                else:
-                    otherDict[other] += 1
+                     otherDict[other] = 1
+                 else:
+                     otherDict[other] += 1
             hashtagDict[hashtag]["associatedTags"] = otherDict
-
-    # read in currently available assignments from file and assign if possible
+ 
+     # read in currently available assignments from file and assign if possible
     filename = HASHTAG_FILE_NAME
     if os.path.isfile(filename):
         with codecs.open(filename, "r", "utf-8") as file:
@@ -120,11 +122,11 @@ def createHashtagDict(tweets):
             hashtagDict[classifiedHashtag]["class"] = classifiedHashtags[classifiedHashtag]
         # increment alignment for classes of associated hashtags
         hashtagDict = shareHashtagAlignments(hashtagDict)
-
+ 
     # create list of common unclassified hashtags
     significantHashtags = list()
-    for hashtag in hashtagDict:
-        tagTuple = hashtagDict[hashtag]
+     for hashtag in hashtagDict:
+         tagTuple = hashtagDict[hashtag]
         if tagTuple["class"] == NEUT and \
         tagTuple["count"] >= MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY and \
         not any(i in tagTuple["associatedTags"] for i in significantHashtags):
@@ -136,7 +138,7 @@ def createHashtagDict(tweets):
         print "==================================="
         
     hashtagNum = str(len(significantHashtags)) 
-    for i, h in enumerate(significantHashtags):
+     for i, h in enumerate(significantHashtags):
         if (h.find(ELLIPSES) == -1):
             prompt = "#" + str(i) + " of " + hashtagNum + " - #" + h + ": "
             op = raw_input(prompt.encode("utf-8"))
@@ -177,12 +179,28 @@ def shareHashtagAlignments(hashtagDict):
             hashtagDict[hashtag]["class"] = NEUT
     return hashtagDict
 
-
+ 
 # if categorized, change user's alignment distribution: (+1, -1, +0) for anti, (+0, -1, +1) for pro
 def primaryAssignment(tweet, hashtagDict):
     # hashtagDict = {hashtag: hashtag class, ...} 
     tweet["class"] = vote(tweet["hashtags"], hashtagDict)
     return tweet
+
+### Primary: Assigning tweet categories
+#       look up any hashtags in hashtagList
+#       loop through and assign same value as highest joint_frequency hashtag if nonzero value
+#       keep looping until no more new assignments made
+#
+#       empty tuple votes
+#       for screen_name:
+#           search for screen_name in uuusers
+#           DP: if user found and user assigned to a category, modify votes to (+1, +0, +0) or (+0, +0, +1)
+#       results = R - L
+#       if results > 0:
+#           tweet category=pro
+#       elif results < 0:
+#           tweet category=anti
+###
 
 
 def auxiliaryAssignment(tweet, users):
@@ -191,6 +209,19 @@ def auxiliaryAssignment(tweet, users):
     if tweet["class"] == NEUT:
         tweet["class"] = vote(tweet["mentionedScreenNames"], users)
     return tweet
+### Auxiliary: Assigning tweet categories
+# for each unassigned trump tweet:
+#   if unassigned tweet mentions any screen_name(s):
+#       empty tuple votes
+#       for screen_name:
+#           search for screen_name in uuusers
+#           DP: if user found and user assigned to a category, modify votes to (+1, +0, +0) or (+0, +0, +1)
+#       results = R - L
+#       if results > 0:
+#           tweet category=pro
+#       elif results < 0:
+#           tweet category=anti
+###
 
 
 def vote(voters, voterDict):
@@ -235,21 +266,32 @@ def userClassAssignment(user, tweetList):
 
     user["alignment"] = votes
     return user
+### Assigning user categories (refrain)
+# for uu in users:
+#   DP: Allow unassigned to be an end category or prioritize pro/anti? For now, let it be a category
+#   empty tuple votes
+#   results = R - L
+#   if results > 0 and R > C:
+#       user category=pro
+#   elif results < 0 and L > C:
+#       user category=anti
+###
 
-
+ 
 def printClassDistribution(items, description):
-    distribution = [0, 0, 0]
-
+     distribution = [0, 0, 0]
+ 
     for item in items:
         if item["class"] == ANT:
-            distribution[LEFT] += 1
+             distribution[LEFT] += 1
         elif item["class"] == PRO:
-            distribution[RIGHT] += 1
-        else:
-            distribution[NEUT] += 1
+             distribution[RIGHT] += 1
+         else:
+             distribution[NEUT] += 1
+ 
+     print "Class distribution of", description, ":"
+     print distribution[LEFT], distribution[NEUT], distribution[RIGHT]
+ 
+ if __name__ == '__main__':
+     main()
 
-    print "Class distribution of", description, ":"
-    print distribution[LEFT], distribution[NEUT], distribution[RIGHT]
-
-if __name__ == '__main__':
-    main()
