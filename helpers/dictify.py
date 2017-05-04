@@ -14,15 +14,10 @@ def main():
 #           users = [(user 1 id, user 1 screen_name, user alignment, user class)]
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('fileNumber', help="file number if split file, 0 if not")
+    parser.add_argument('baseFileName', help="enter base name without the extension")
     args = parser.parse_args()
 
-    baseName = FILE_NAME
-
-    if int(args.fileNumber) != 0:
-        baseName += args.fileNumber
-
-    trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
+    trumpJson, historyJson, userJson = generateOldIntermediateFileNames(args.baseFileName)
 
     with codecs.open(trumpJson, "r", "utf-8") as file:
         allTrumpTweetLists = json.load(file)

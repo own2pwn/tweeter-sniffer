@@ -18,9 +18,6 @@ MINIMUM_TWEET_COUNT = 100   # DP: find count in tweets: if total < 100, print an
 MINIMUM_NONTRUMP_PERC = 0.4 # DP: if nontrump / total < 40%, print and next user
 MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 10 # DP: let's say hashtag count > 100 is significant
 
-# FILE_NAME = "trump_all_dedup"
-FILE_NAME = "trump_sample"
-
 HASHTAG_FILE_NAME = "classifiedHashtags.json"
 
 def generateInputFileName():
@@ -35,6 +32,6 @@ def generateNewIntermediateFileNames(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
     return baseName + "_trumps" + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
 
-def generateOutputFileName():
+def generateOutputFileName(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
     return baseName + "_dataset" + param + ".json"

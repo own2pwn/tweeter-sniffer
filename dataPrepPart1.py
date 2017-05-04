@@ -20,11 +20,12 @@ HASHTAG_PATTERN = re.compile(r"#([\w']+)")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('fileNumber', help="file number if split file, 0 if not")
+    parser.add_argument('baseFileName', help="enter base name without the extension")
+    parser.add_argument('fileNumber', help="if no partial file number associated, enter 0")
     args = parser.parse_args()
 
     global TWITTER_SECRET
-    baseName = FILE_NAME
+    baseName = args.baseFileName
 
     if int(args.fileNumber) != 0:
         baseName += args.fileNumber
@@ -111,13 +112,15 @@ def main():
 
         time.sleep(15) # include delay between every user
 
-    with codecs.open(FILE_NAME + "_trumps" + param + ".json", "w+", "utf-8") as file:
+    trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
+
+    with codecs.open(trumpJson, "w+", "utf-8") as file:
         json.dump(allTrumpTweets, file, indent=4, separators=(',', ': '))
 
-    with codecs.open(FILE_NAME + "_nontrumps" + param + ".json", "w+", "utf-8") as file:
+    with codecs.open(historyJson, "w+", "utf-8") as file:
         json.dump(nontrumpHistories, file, indent=4, separators=(',', ': '))
 
-    with codecs.open(FILE_NAME + "_users" + param + ".json", "w+", "utf-8") as file:
+    with codecs.open(userJson, "w+", "utf-8") as file:
         json.dump(profiles, file, indent=4, separators=(',', ': '))
 
 
