@@ -13,10 +13,24 @@ RIGHT = 2
 # output file for sniffer
 FRESH_TRUMP_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
 
-# for dataPrepPart1 and dataPrepPart2
-MINIMUM_TWEET_COUNT = 100   # DP: find count in tweets: if total < 100, print and next user
-MINIMUM_NONTRUMP_PERC = 0.4 # DP: if nontrump / total < 40%, print and next user
-MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 10 # DP: let's say hashtag count > 100 is significant
+#### for dataPrepPart1 and dataPrepPart2 ###
+
+# DP: find count in tweets: if total < 100, print and next user
+MINIMUM_TWEET_COUNT = 100
+
+# DP: if nontrump / total < 40%, print and next user
+MINIMUM_NONTRUMP_PERC = 0.4
+
+# DP: let's say hashtag count > 100 is significant
+MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 100 
+
+# number of hashtags you're prompted for at a time
+MAXIMUM_SIGNIFICANT_HASHTAGS = 15
+
+# weight of user class-specification (user may NOT be right--overturn if user contradicts herself)
+# USER_SPECIFIED_CLASS_WEIGHT * 100 (%) 
+# should be greater than 1 unless you're really that suspicious of the user's judgment
+USER_SPECIFIED_CLASS_WEIGHT = 2
 
 HASHTAG_FILE_NAME = "classifiedHashtags.json"
 
