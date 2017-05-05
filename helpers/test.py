@@ -12,7 +12,6 @@ import sys
 import os
 home = os.path.abspath('..')
 sys.path.insert(0, home)
-from twitterSecrets import twitterSecrets
 
 TWITTER_SECRET = twitterSecrets[3]
 
@@ -35,4 +34,12 @@ try:
         break
 
 except TwitterSearchException as e:
+    # add file to path to include module in parent directory if no packages defined when script called 
+    if __package__ is None:
+        import sys
+        from os import path
+        sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+        from twitterSecrets import twitterSecrets
+    else:
+        from ..twitterSecrets import twitterSecrets
     print(e)

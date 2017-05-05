@@ -3,7 +3,6 @@
 import codecs
 import json
 import argparse
-from snifferCommons import NUM_TWEETS_PER_FILE
 
 
 def main():
@@ -30,4 +29,12 @@ def main():
             masterFile.write(line[0] + ", " + line[1])
 
 if __name__ == '__main__':
+    # add file to path to include module in parent directory if no packages defined when script called 
+    if __package__ is None:
+        import sys
+        from os import path
+        sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+        from snifferCommons import NUM_TWEETS_PER_FILE
+    else:
+        from ..snifferCommons import NUM_TWEETS_PER_FILE
     main()

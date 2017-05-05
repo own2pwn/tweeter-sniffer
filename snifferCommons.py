@@ -16,8 +16,7 @@ RIGHT = 2
 FRESH_TRUMP_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
 
 #### for rawSplit ####
-# NUM_TWEETS_PER_FILE = 1000
-NUM_TWEETS_PER_FILE = 50000
+NUM_TWEETS_PER_FILE = 1000
 
 #### for dataPrepPart1 and dataPrepPart2 ###
 
