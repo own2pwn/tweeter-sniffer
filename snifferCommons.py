@@ -1,5 +1,7 @@
 # This file contains all the file names and data preprocessing parameters for the Sniffer
 
+TOPIC = r"trump"
+
 ELLIPSES = u'\u2026' # UTF-8 for '...' character
 
 UNK = 0 
@@ -14,7 +16,8 @@ RIGHT = 2
 FRESH_TRUMP_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
 
 #### for rawSplit ####
-NUM_TWEETS_PER_FILE = 1000
+# NUM_TWEETS_PER_FILE = 1000
+NUM_TWEETS_PER_FILE = 50000
 
 #### for dataPrepPart1 and dataPrepPart2 ###
 

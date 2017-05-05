@@ -6,14 +6,10 @@ import time
 import re
 import json
 import argparse
-
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('..'))
 from twitterSecrets import twitterSecrets
 from snifferCommons import *
 
-TRUMP_PATTERN = re.compile(r"(\W|^)trump(\W|$)", re.IGNORECASE)
+TRUMP_PATTERN = re.compile(r"(\W|^)" + TOPIC + r"(\W|$)", re.IGNORECASE)
 MENTIONED_PATTERN = re.compile(r"@(\w+)")
 HASHTAG_PATTERN = re.compile(r"#([\w']+)")
 
@@ -29,7 +25,7 @@ def main():
 
     if int(args.fileNumber) != 0:
         baseName += args.fileNumber
-        TWITTER_SECRET = twitterSecrets[(int(args.fileNumber) - 1) % 4]
+        TWITTER_SECRET = twitterSecrets[(int(args.fileNumber) - 1) % len(twitterSecrets)]
     else:
         TWITTER_SECRET = twitterSecrets[0]
 
@@ -86,7 +82,7 @@ def main():
         nontrumpLen = len(nontrump)
         nontrumpPerc = nontrumpLen / float(tweetLen)
         if nontrumpPerc < MINIMUM_NONTRUMP_PERC:
-            print "User", uu, "removed because only", nontrumpPerc * 100, "% of tweet history does not mention Trump\n"
+            print "User", uu, "removed because only", "{0:.2f}".format(nontrumpPerc * 100), "% of tweet history does not mention Trump\n"
             continue
 
         allTrumpTweets.extend(trump)
