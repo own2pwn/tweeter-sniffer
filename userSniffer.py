@@ -9,7 +9,7 @@ import argparse
 from twitterSecrets import twitterSecrets
 from snifferCommons import *
 
-TRUMP_PATTERN = re.compile(r"(\W|^)" + TOPIC + r"(\W|$)", re.IGNORECASE)
+TRUMP_PATTERN = re.compile(r"(\W|^){}(\W|$)".format(TOPIC), re.IGNORECASE)
 MENTIONED_PATTERN = re.compile(r"@(\w+)")
 HASHTAG_PATTERN = re.compile(r"#([\w']+)")
 
@@ -29,7 +29,7 @@ def main():
     else:
         TWITTER_SECRET = twitterSecrets[0]
 
-    with codecs.open(baseName + ".txt", "r", "utf-8") as file:
+    with codecs.open("{}.txt".format(baseName), "r", "utf-8") as file:
         content = file.readlines()
 
     foundTweets = []
@@ -41,8 +41,8 @@ def main():
         if x[0] not in uniqueUsers:
             uniqueUsers.append(x[0])
 
-    foundLen = len(foundTweets)
-    print len(uniqueUsers), "unique users initially present in dataset of", foundLen, "tweets\n"
+    foundLen = str(len(foundTweets))
+    print "{} unique users initially present in dataset of {} tweets\n".format(len(uniqueUsers), foundLen)
 
     allTrumpTweets = []
     nontrumpHistories = []
@@ -53,18 +53,18 @@ def main():
         trump = []
         nontrump = []
 
-        uu = int(uu)
-
         # screenName, tweets = pullDummy(uu)
         screenName, tweets = pullInfo(uu)
         tweetLen = len(tweets)
         
         if tweetLen < MINIMUM_TWEET_COUNT:
             if tweetLen > 0:
-                print "User", uu, "removed because only", tweetLen, "tweets are available\n"
+                print "User #{} (id:{}) removed because only {} tweets are available\n".format(n, uu, tweetLen)
             else:
-                print "User", uu, "removed because no authored tweets were retrieved\n"
+                print "User #{} (id:{}) removed because no authored tweets were retrieved\n".format(n, uu)
             continue
+
+        uu = int(uu)
 
         for tweet in tweets:
             if isTrumpTweet(tweet):
@@ -82,7 +82,7 @@ def main():
         nontrumpLen = len(nontrump)
         nontrumpPerc = nontrumpLen / float(tweetLen)
         if nontrumpPerc < MINIMUM_NONTRUMP_PERC:
-            print "User", uu, "removed because only", "{0:.2f}".format(nontrumpPerc * 100), "% of tweet history does not mention Trump\n"
+            print "User #{} (id:{}) removed because only {}% of tweet history does not mention {}\n".format(n, uu, "{0:.2f}".format(nontrumpPerc * 100), TOPIC)
             continue
 
         allTrumpTweets.extend(trump)
@@ -100,7 +100,7 @@ def main():
         userDict['class'] = UNK
         profiles.append(userDict)
 
-        print "User #", n + 1, "of", foundLen, ":"
+        print "User #{} of {}:".format(n + 1, foundLen)
         print "ID:", uu
         print "Screen name:", screenName
         print trumpLen, "trump tweets"
