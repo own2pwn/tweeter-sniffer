@@ -32,10 +32,15 @@ MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 100
 # number of hashtags you're prompted for at a time
 MAXIMUM_SIGNIFICANT_HASHTAGS = 15
 
-# weight of user class-specification (user may NOT be right--overturn if user contradicts herself)
+# weight of user class-specification vote (user may NOT be right--overturn if user contradicts herself)
 # USER_SPECIFIED_CLASS_WEIGHT * 100 (%) 
 # should be greater than 1 unless you're really that suspicious of the user's judgment
 USER_SPECIFIED_CLASS_WEIGHT = 2
+
+# weight of screen name mention vote (assuming that users talk to and/or retweet more frequently with users they agree with)
+# SCREEN_NAME_MENTION_WEIGHT * 100 (%)
+# should be less than 1 since it may be a retort to an opponent
+SCREEN_NAME_MENTION_WEIGHT = 0.3
 
 
 def generateInputFileName():

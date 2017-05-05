@@ -53,6 +53,9 @@ def main():
         trump = []
         nontrump = []
 
+        # need int id to pull by user ids
+        uu = int(uu)
+
         # screenName, tweets = pullDummy(uu)
         screenName, tweets = pullInfo(uu)
         tweetLen = len(tweets)
@@ -63,8 +66,6 @@ def main():
             else:
                 print "User #{} (id:{}) removed because no authored tweets were retrieved\n".format(n, uu)
             continue
-
-        uu = int(uu)
 
         for tweet in tweets:
             if isTrumpTweet(tweet):
