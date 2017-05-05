@@ -4,7 +4,6 @@ import codecs
 import json
 import argparse
 import snifferCommons
-import sys
 
 
 def main():

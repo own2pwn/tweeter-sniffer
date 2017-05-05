@@ -13,6 +13,9 @@ RIGHT = 2
 # output file for sniffer
 FRESH_TRUMP_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
 
+#### for rawSplit ####
+NUM_TWEETS_PER_FILE = 1000
+
 #### for dataPrepPart1 and dataPrepPart2 ###
 
 # DP: find count in tweets: if total < 100, print and next user
@@ -32,7 +35,6 @@ MAXIMUM_SIGNIFICANT_HASHTAGS = 15
 # should be greater than 1 unless you're really that suspicious of the user's judgment
 USER_SPECIFIED_CLASS_WEIGHT = 2
 
-HASHTAG_FILE_NAME = "classifiedHashtags.json"
 
 def generateInputFileName():
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
@@ -45,6 +47,10 @@ def generateOldIntermediateFileNames(baseName):
 def generateNewIntermediateFileNames(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
     return baseName + "_trumps" + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
+
+def generateHashtagDictFileName(baseName):
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
+    return baseName + "_classifiedHashtags.json"
 
 def generateOutputFileName(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))

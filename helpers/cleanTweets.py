@@ -1,5 +1,11 @@
 #!/usr/bin/python2.7
 
+#
+# THIS SCRIPT SHOULD NOT BE NECESSARY! 
+# Created for one-time use to clean up shoddily collected tweets
+#
+
+
 import codecs
 import re
 import argparse

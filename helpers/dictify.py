@@ -1,5 +1,12 @@
 #!/usr/bin/python2.7
 
+#
+# THIS SCRIPT SHOULD NOT BE NECESSARY! 
+# Created for one-time use to convert the original list of lists format to list of dicts
+# so that Megumi didn't have to count list items every time she added or removed things
+#
+
+
 import codecs
 import re
 import json

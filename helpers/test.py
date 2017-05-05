@@ -1,5 +1,13 @@
-from TwitterSearch import *
+#!/usr/bin/python2.7
 
+
+#
+# THIS SCRIPT SHOULD NOT BE NECESSARY! 
+# Created for quick test of TwitterSearch use and kept around because no real need to delete it
+#
+
+
+from TwitterSearch import *
 import sys
 import os
 home = os.path.abspath('..')

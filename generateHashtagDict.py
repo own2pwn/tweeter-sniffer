@@ -1,26 +1,18 @@
 #!/usr/bin/env python2.7
  
 import codecs
-import re
 import json
-import os
 import argparse
 from snifferCommons import *
- 
+
 
 def main():
- 
- #   input:  allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...], 
- #           nontrumpHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
- #           users = [(user 1 id, user 1 screen_name, user alignment, user class)]
- 
     parser = argparse.ArgumentParser()
     parser.add_argument('baseFileName', help="enter base name without the extension")
     args = parser.parse_args()
  
     baseName = args.baseFileName
 
- 
     trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
  
     with codecs.open(trumpJson, "r", "utf-8") as file:
@@ -105,11 +97,10 @@ def main():
 
     print "Classification complete"
 
-    with codecs.open(HASHTAG_FILE_NAME, "w+", "utf-8") as file:
-        json.dump(hashtagDict, file, indent=4, separators=(',', ': '))
-
     hashtagDict = { h: hashtagDict[h]["class"] for h in hashtagDict } # return dict that gives hashtags and assigned class
 
+    with codecs.open(generateHashtagDictFileName(baseName), "w+", "utf-8") as file:
+        json.dump(hashtagDict, file, indent=4, separators=(',', ': '))
 
 # CHC: maybe consider later doing something with cut-off hashtags?
 # create dict that gives hashtags, their frequencies, their joint frequencies with other hashtags, and assigned class 
