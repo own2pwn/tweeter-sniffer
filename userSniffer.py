@@ -62,9 +62,9 @@ def main():
         
         if tweetLen < MINIMUM_TWEET_COUNT:
             if tweetLen > 0:
-                print "User #{} (id:{}) removed because only {} tweets are available\n".format(n, uu, tweetLen)
+                print "User #{} (id:{}) removed because only {} tweets are available\n".format(n + 1, uu, tweetLen)
             else:
-                print "User #{} (id:{}) removed because no authored tweets were retrieved\n".format(n, uu)
+                print "User #{} (id:{}) removed because no authored tweets were retrieved\n".format(n + 1, uu)
             continue
 
         for tweet in tweets:
@@ -83,7 +83,7 @@ def main():
         nontrumpLen = len(nontrump)
         nontrumpPerc = nontrumpLen / float(tweetLen)
         if nontrumpPerc < MINIMUM_NONTRUMP_PERC:
-            print "User #{} (id:{}) removed because only {}% of tweet history does not mention {}\n".format(n, uu, "{0:.2f}".format(nontrumpPerc * 100), TOPIC)
+            print "User #{} (id:{}) removed because only {}% of tweet history does not mention {}\n".format(n + 1, uu, "{0:.2f}".format(nontrumpPerc * 100), TOPIC)
             continue
 
         allTrumpTweets.extend(trump)
