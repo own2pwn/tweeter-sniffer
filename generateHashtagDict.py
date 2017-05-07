@@ -67,7 +67,7 @@ def main():
                 tagTuple["count"] >= hashtagFreq and \
                 tagTuple["noComment"] == False and \
                 not any(i in tagTuple["associatedTags"] for i in significantHashtags):
-                    print "Found significant tag {} (count: {})".format(hashtag, tagTuple["count"])
+                    print "Found significant tag {} (count: {})".format(hashtag.encode("utf-8"), tagTuple["count"])
                     significantHashtags.append(hashtag)
                 # else:
                     # print "-----Tag \"{}\" not significant: only {} instances".format(hashtag, hashtagDict[hashtag]["count"])
@@ -91,16 +91,19 @@ def main():
             hashtagNum = str(len(significantHashtags)) 
             for i, h in enumerate(significantHashtags):
                 if (h.find(ELLIPSES) == -1):
-                    prompt = "#{} of {} - #{}: ".format(i + 1, hashtagNum, h)
-                    op = raw_input(prompt.encode("utf-8"))
-                    if op == "+":
-                        hashtagDict[h]["alignment"][RIGHT] += USER_SPECIFIED_CLASS_WEIGHT
-                        hashtagDict = shareHashtagAlignments(h, RIGHT, hashtagDict)
-                    elif op == "-":
-                        hashtagDict[h]["alignment"][LEFT] += USER_SPECIFIED_CLASS_WEIGHT
-                        hashtagDict = shareHashtagAlignments(h, LEFT, hashtagDict)
-                    elif op == "":
-                        hashtagDict[h]["noComment"] = True
+                    prompt = "#{} of {} - #{}: ".format(i + 1, hashtagNum, h.encode("utf-8"))
+                    try:
+                        op = raw_input(prompt.encode("utf-8"))
+                        if op == "+":
+                            hashtagDict[h]["alignment"][RIGHT] += USER_SPECIFIED_CLASS_WEIGHT
+                            hashtagDict = shareHashtagAlignments(h, RIGHT, hashtagDict)
+                        elif op == "-":
+                            hashtagDict[h]["alignment"][LEFT] += USER_SPECIFIED_CLASS_WEIGHT
+                            hashtagDict = shareHashtagAlignments(h, LEFT, hashtagDict)
+                        elif op == "":
+                            hashtagDict[h]["noComment"] = True
+                    except:
+                        continue
 
             hashtagDict, reassignments = assignHashtagClasses(hashtagDict)
 
