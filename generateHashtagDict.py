@@ -5,6 +5,7 @@ import json
 import argparse
 import os
 from snifferCommons import *
+import operator
 
 # do need to look at all users at once? only when using to vote for tweets, so search through each file then
 #       deduping was done jankily, make sure deduping is included in flow of scripts -> rawSplit.py
@@ -19,6 +20,9 @@ from snifferCommons import *
 # all trumpTweet dicts + user dicts -> classify tweets (auxiliary)
 # all trumpTweet dicts + user dicts -> classify users
 # all user dicts + history dicts -> produce dataset
+
+def giveCount(hashtag, hashtagDict):
+    return 
 
 
 def main():
@@ -48,15 +52,18 @@ def main():
         currentNum += 1
 
     totalCount = len(hashtagDict)
-    print "\nNumber of hashtags in the dict is {}\n".format(totalCount)
+    print "\nNumber of hashtags in the dict is {}".format(totalCount)
  
     classify = True
     hashtagFreq = MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY
 
+    # create list of hashtags sorted by frequency
+    sortedByFreq = sorted(hashtagDict.keys(), key=lambda x: hashtagDict[x]["count"], reverse=True)
+
     while classify:
         significantHashtags = list()    # create list of common hashtags
         print ""
-        for hashtag in hashtagDict:
+        for hashtag in sortedByFreq:
             if MAXIMUM_SIGNIFICANT_HASHTAGS > len(significantHashtags):
                 tagTuple = hashtagDict[hashtag]
                 # check if any alignment votes to see if need to assign
