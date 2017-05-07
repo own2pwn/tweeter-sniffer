@@ -53,7 +53,7 @@ def generateOldIntermediateFileNames(baseName):
 
 def generateNewIntermediateFileNames(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
-    return baseName + "_" TOPIC + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
+    return baseName + "_" + TOPIC + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
 
 def generateHashtagDictFileName(baseName):
     param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
