@@ -24,7 +24,7 @@ def main():
         dataJsons = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))
         newdataJsons = generateNewIntermediateFileNames(baseName + ordinal.format(currentNum))
 
-        dataJsons.pop(0) # don't need topicJson
+        dataJsons = dataJsons[1:] # don't need topicJson
 
         for i, dataJson in enumerate(dataJsons): # for historyJson and userJson
             if os.path.exists(dataJson):
@@ -42,12 +42,15 @@ def main():
                 for item in fileList:
                     userId = item.pop("userId")
                     masterFileDict[userId] = item
+                    print "Added {} to dict for {}".format(userId, dataJson)
                 
                 with codecs.open(newdataJsons[i], "w+", "utf-8") as file:
                     json.dump(masterFileDict, file, indent=4, separators=(',', ': '))
             else:
                 print "Error:", dataJson, "does not exist in current directory"
                 exit()
+                
+        currentNum += 1
 
 
 if __name__ == '__main__':
