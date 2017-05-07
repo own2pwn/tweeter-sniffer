@@ -5,6 +5,20 @@ import json
 import argparse
 from snifferCommons import *
 
+# do need to look at all users at once? only when using to vote for tweets, so search through each file then
+#       deduping was done jankily, make sure deduping is included in flow of scripts -> rawSplit.py
+# do need to look at all user histories at once? search through each file by user id when necesary
+#   reformat histories to be dict of userId => [texts]
+#            users to be     dict of userId => [screen_name, alignment, class]
+# do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via mentioned users
+
+# all trumpTweet dicts -> produce single hashtag dictionary
+# all trumpTweet dicts + hashtag dictionary -> classify tweets (primary)
+# all trumpTweet dicts + user dicts -> classify users
+# all trumpTweet dicts + user dicts -> classify tweets (auxiliary)
+# all trumpTweet dicts + user dicts -> classify users
+# all user dicts + history dicts -> produce dataset
+
 
 def main():
     parser = argparse.ArgumentParser()
