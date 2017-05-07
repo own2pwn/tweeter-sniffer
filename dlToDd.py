@@ -20,7 +20,7 @@ def main():
     ordinal = "{" + ":0{}d".format(len(args.lastPartialNumber)) + "}"
 
     currentNum = 1
-    while currentNum < endingPartialNumber:
+    while currentNum <= endingPartialNumber:
         dataJsons = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))
         newdataJsons = generateNewIntermediateFileNames(baseName + ordinal.format(currentNum))
 
@@ -28,6 +28,7 @@ def main():
 
         for i, dataJson in enumerate(dataJsons): # for historyJson and userJson
             if os.path.exists(dataJson):
+                print dataJson
                 with codecs.open(dataJson, "r", "utf-8") as file:
                     fileList = json.load(file)
 
@@ -49,7 +50,7 @@ def main():
             else:
                 print "Error:", dataJson, "does not exist in current directory"
                 exit()
-                
+
         currentNum += 1
 
 
