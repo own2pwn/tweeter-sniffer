@@ -3,7 +3,7 @@
 import codecs
 import json
 import argparse
-from snifferCommons import generateOldIntermediateFileNames
+from snifferCommons import generateOldIntermediateFileNames, generateNewIntermediateFileNames
 import os
 
 
@@ -21,11 +21,14 @@ def main():
 
     currentNum = 1
     while currentNum < endingPartialNumber:
-        fileDict = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))
-        for i in range(1,3):
-            if os.path.exists(historyJson):
+        dataJsons = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))
+        newdataJsons = generateNewIntermediateFileNames(baseName + ordinal.format(currentNum))
 
-                with codecs.open(historyJson, "r", "utf-8") as file:
+        dataJsons.pop(0) # don't need topicJson
+
+        for i, dataJson in enumerate(dataJsons): # for historyJson and userJson
+            if os.path.exists(dataJson):
+                with codecs.open(dataJson, "r", "utf-8") as file:
                     fileList = json.load(file)
 
                 # do need to look at all users at once? only when using to vote for tweets, so search through each file then
@@ -36,30 +39,15 @@ def main():
                 #            trumpTweets     dict of userId => { tweetId => text, tweetId => text }
                 # do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via 
                 masterFileDict = dict()
-                for tweet in fileList:
-                    if tweet["id"] not in masterFileDict:
-                        tweet.pop("id")
-                        masterFileDict[tweet["id"]] = tweet # ensure no duplicate tweets
-            else:
-                print "Error:", topicJson, "does not exist in current directory"
-                exit()
-
-
-            # generator???? sequential read-in of hashtagFile
-            # for each file:
-                # generate file name
-                # open and read in hashtag dict
-                # close file
-                # for each tag:
-                    # if tag is new:
-                        # add tag item to masterDict
-                    # else:
-                        # add tag stats to matching tag item in masterDict
-
-    hashtagFileName = generateHashtagDictFileName(baseName)
+                for item in fileList:
+                    userId = item.pop("userId")
+                    masterFileDict[userId] = item
                 
-    with codecs.open(hashtagFileName, "w+", "utf-8") as masterFile:
-        json.dump(masterHashtagDict, masterFile, indent=4, separators=(',', ': '))
+                with codecs.open(newdataJsons[i], "w+", "utf-8") as file:
+                    json.dump(masterFileDict, file, indent=4, separators=(',', ': '))
+            else:
+                print "Error:", dataJson, "does not exist in current directory"
+                exit()
 
 
 if __name__ == '__main__':
