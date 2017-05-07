@@ -13,7 +13,7 @@ NEUT = 1
 RIGHT = 2
 
 # output file for sniffer
-FRESH_TRUMP_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
+FRESH_TOPIC_TWEET_SEARCH_FILENAME = "new_tweet_search.txt"
 
 #### for rawSplit ####
 NUM_TWEETS_PER_FILE = 1000
@@ -24,7 +24,7 @@ NUM_TWEETS_PER_FILE = 1000
 MINIMUM_TWEET_COUNT = 100
 
 # DP: if nontrump / total < 40%, print and next user
-MINIMUM_NONTRUMP_PERC = 0.4
+MINIMUM_NONTOPIC_PERC = 0.4
 
 # DP: let's say hashtag count > 100 is significant
 MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY = 100 
@@ -44,21 +44,21 @@ SCREEN_NAME_MENTION_WEIGHT = 0.3
 
 
 def generateInputFileName():
-    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
     return baseName + "_dataset" + param + ".json"
 
 def generateOldIntermediateFileNames(baseName):
-    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
-    return baseName + "_trumpTweets" + param + ".json", baseName + "_histories" + param + ".json", baseName + "_profiles" + param + ".json"
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
+    return baseName + "_" + TOPIC + "Tweets" + param + ".json", baseName + "_histories" + param + ".json", baseName + "_profiles" + param + ".json"
 
 def generateNewIntermediateFileNames(baseName):
-    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
-    return baseName + "_trumps" + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
+    return baseName + "_" TOPIC + param + ".json", baseName + "_nontrumps" + param + ".json", baseName + "_users" + param + ".json"
 
 def generateHashtagDictFileName(baseName):
-    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
     return baseName + "_classifiedHashtags.json"
 
 def generateOutputFileName(baseName):
-    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTRUMP_PERC * 100))
+    param = "_" + str(MINIMUM_TWEET_COUNT) + "_" + str(int(MINIMUM_NONTOPIC_PERC * 100))
     return baseName + "_dataset" + param + ".json"

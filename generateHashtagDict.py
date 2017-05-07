@@ -3,6 +3,7 @@
 import codecs
 import json
 import argparse
+import os
 from snifferCommons import *
 
 # do need to look at all users at once? only when using to vote for tweets, so search through each file then
@@ -23,95 +24,108 @@ from snifferCommons import *
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('baseFileName', help="enter base name without the extension")
+    parser.add_argument('lastPartialNumber', help="enter the last partial file with any leading zeros")
     args = parser.parse_args()
- 
+
     baseName = args.baseFileName
 
-    trumpJson, historyJson, userJson = generateOldIntermediateFileNames(baseName)
- 
-    with codecs.open(trumpJson, "r", "utf-8") as file:
-        allTrumpTweets = json.load(file)
- 
+    # for now ignore case of whole file, best is to just update format from start so this script is unnecessary
+    endingPartialNumber = int(args.lastPartialNumber)
+    ordinal = "{" + ":0{}d".format(len(args.lastPartialNumber)) + "}"
+
     hashtagDict = dict()
-    hashtagDict = enterHashtagEntries(hashtagDict, allTrumpTweets)
+
+    currentNum = 1 
+    while currentNum <= endingPartialNumber: # for now, only allow creation of hashtagDicts for split files
+        topicJson = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))[0]
+        # print "Searching for file {}...".format(topicJson)
+        if os.path.exists(topicJson):
+            print "Reading from {}...".format(topicJson)
+            with codecs.open(topicJson, "r", "utf-8") as file:
+                allTopicTweets = json.load(file)
+ 
+            hashtagDict = enterHashtagEntries(hashtagDict, allTopicTweets)
+        currentNum += 1
 
     totalCount = len(hashtagDict)
+    print "\nNumber of hashtags in the dict is {}\n".format(totalCount)
  
     classify = True
     hashtagFreq = MINUMUM_SIGNIFICIANT_HASHTAG_FREQUENCY
+
     while classify:
-        # create list of common hashtags
-        significantHashtags = list()
-        sigCount = 0
-        produceSig = True
+        significantHashtags = list()    # create list of common hashtags
+        print ""
+        for hashtag in hashtagDict:
+            if MAXIMUM_SIGNIFICANT_HASHTAGS > len(significantHashtags):
+                tagTuple = hashtagDict[hashtag]
+                # check if any alignment votes to see if need to assign
+                if sum(tagTuple["alignment"]) == 0 and \
+                tagTuple["count"] >= hashtagFreq and \
+                tagTuple["noComment"] == False and \
+                not any(i in tagTuple["associatedTags"] for i in significantHashtags):
+                    print "Found significant tag {} (count: {})".format(hashtag, tagTuple["count"])
+                    significantHashtags.append(hashtag)
+                # else:
+                    # print "-----Tag \"{}\" not significant: only {} instances".format(hashtag, hashtagDict[hashtag]["count"])
 
-        while produceSig:
-            for hashtag in hashtagDict:
-                while MAXIMUM_SIGNIFICANT_HASHTAGS > sigCount:
-                    tagTuple = hashtagDict[hashtag]
-                    # check if any alignment votes to see if need to assign
-                    if sum(tagTuple["alignment"]) != 0 and \
-                    tagTuple["count"] >= hashtagFreq and \
-                    not any(i in tagTuple["associatedTags"] for i in significantHashtags):
-                        significantHashtags.append(hashtag)
-                        sigCount += 1
-
-            if sigCount == 0:
-                prompt = "No more hashtags of frequency >=", hashtagFreq + \
-                "! Would you like to classify hashtags of frequency", hashtagFreq / 2 + \
-                "? (y/n) "
-                stopAsking = False
-                while stopAsking == False:
+        if len(significantHashtags) == 0 and hashtagFreq > 0:
+            prompt = "No hashtags of frequency >={} left to classify! Would you like to classify hashtags of frequency == {}? (y/n) ".format(hashtagFreq, hashtagFreq / 2)
+            stopAsking = False
+            while not stopAsking:
+                op = raw_input(prompt.encode("utf-8"))
+                if op != "":
+                    op = op.lower()[0]
+                if op == "n":
+                    stopAsking = True
+                    classify = False
+                elif op == "y":
+                    stopAsking = True
+                    hashtagFreq /= 2     
+        else:
+            print "==================================="
+            
+            hashtagNum = str(len(significantHashtags)) 
+            for i, h in enumerate(significantHashtags):
+                if (h.find(ELLIPSES) == -1):
+                    prompt = "#{} of {} - #{}: ".format(i + 1, hashtagNum, h)
                     op = raw_input(prompt.encode("utf-8"))
-                    answer = op.lower()[0]
-                    if answer == "n":
-                        classify = False
-                        stopAsking = True
-                    elif answer == "y":
-                        hashtagFreq /= 2
+                    if op == "+":
+                        hashtagDict[h]["alignment"][RIGHT] += USER_SPECIFIED_CLASS_WEIGHT
+                        hashtagDict = shareHashtagAlignments(h, RIGHT, hashtagDict)
+                    elif op == "-":
+                        hashtagDict[h]["alignment"][LEFT] += USER_SPECIFIED_CLASS_WEIGHT
+                        hashtagDict = shareHashtagAlignments(h, LEFT, hashtagDict)
+                    elif op == "":
+                        hashtagDict[h]["noComment"] = True
 
-            else:
-                print "List of major unclassified hashtags"
-                print "==================================="
-                
-                hashtagNum = str(len(significantHashtags)) 
-                for i, h in enumerate(significantHashtags):
-                    if (h.find(ELLIPSES) == -1):
-                        prompt = "#" + str(i) + " of " + hashtagNum + " - #" + h + ": "
-                        op = raw_input(prompt.encode("utf-8"))
-                        if op == "+":
-                            hashtagDict[h]["alignment"][RIGHT] += USER_SPECIFIED_CLASS_WEIGHT
-                            hashtagDict = shareHashtagAlignments(h, RIGHT, hashtagDict)
-                        elif op == "-":
-                            hashtagDict[h]["alignment"][LEFT] += USER_SPECIFIED_CLASS_WEIGHT
-                            hashtagDict = shareHashtagAlignments(h, LEFT, hashtagDict)
+            hashtagDict, reassignments = assignHashtagClasses(hashtagDict)
 
-                hashtagDict, reassignments = assignHashtagClasses(hashtagDict)
+            printReassignments(reassignments)
 
-                printReassignments()
+            classifiedCount = 0
+            for i in hashtagDict:
+                if hashtagDict[i]["class"] != UNK:
+                    classifiedCount += 1
 
-                classifiedCount = 0
-                for i in hashtagDict:
-                    if hashtagDict[i]["class"] != UNK:
-                        classifiedCount += 1
+            print "\nNumber of unclassified hashtags:", totalCount - classifiedCount
+            print "Number of classified hashtags: {:d} ({:.1%})".format(classifiedCount, classifiedCount/float(totalCount))
+            prompt = "Would you like to classify another batch of up to {} more hashtags? (y/n) ".format(MAXIMUM_SIGNIFICANT_HASHTAGS)
+            
+            stopAsking = False
+            while not stopAsking:
+                op = raw_input(prompt.encode("utf-8"))
+                if op != "":
+                    op = op.lower()[0]
+                if op == "n":
+                    classify = False
+                    stopAsking = True
+                elif op == "y":
+                    stopAsking = True
 
-                print "\nNumber of unclassified hashtags:", totalCount - classifiedCount
-                print "Number of classified hashtags:", classifiedCount, "(" + "%01d" % ((float)classifiedCount / totalCount) + ")"
-                prompt = "Would you like to classify another batch of up to", MAXIMUM_SIGNIFICANT_HASHTAGS, "more hashtags? (y/n) "
-                
-                stopAsking = False
-                while stopAsking == False:
-                    op = raw_input(prompt.encode("utf-8"))
-                    answer = op.lower()[0]
-                    if answer == "n":
-                        classify = False
-                        stopAsking = True
-                    if answer == "y":
-                        stopAsking = True
+    print "Hashtag classification complete"
 
-    print "Classification complete"
-
-    hashtagDict = { h: hashtagDict[h]["class"] for h in hashtagDict } # return dict that gives hashtags and assigned class
+    classifiedHashtags = { h: hashtagDict[h]["class"] for h in hashtagDict } # return dict that gives hashtags and assigned class
 
     with codecs.open(generateHashtagDictFileName(baseName), "w+", "utf-8") as file:
         json.dump(hashtagDict, file, indent=4, separators=(',', ': '))
@@ -121,27 +135,32 @@ def main():
 def enterHashtagEntries(hashtagDict, tweets):
      # hashtagDict = {hashtag: (frequency, {other1: joint_frequency, ...}, hashtag class), ...} 
     for tweet in tweets:
+        # print "Processing tweet id {}...".format(tweet["tweetId"])
         hashtags = tweet["hashtags"]
         for i, hashtag in enumerate(hashtags):
             hashtag = hashtag.lower()
-            if hashtag not in hashtagDict:
-                hashtagDict[hashtag] = {
-                    "count": 1,
-                    "associatedTags": dict(),
-                    "alignment": list(),
-                    "class": UNK
-                }
-            else:
-                hashtagDict[hashtag]["count"] += 1
-            others = hashtags[:i] + hashtags[(i + 1):] # take the list of other hashtags
-            otherDict = hashtagDict[hashtag]["associatedTags"]
-            for other in others: 
-                if other not in otherDict: # add other hashtags to associated hashtags or increment
-                     otherDict[other] = 1
+            if hashtag != "":
+                if hashtag not in hashtagDict:
+                    hashtagDict[hashtag] = {
+                        "count": 1,
+                        "associatedTags": dict(),
+                        "alignment": [0, 0, 0],
+                        "noComment": False, # allows user to skip voting on if unsure
+                        "class": UNK
+                    }
                 else:
-                     otherDict[other] += 1
-            hashtagDict[hashtag]["associatedTags"] = otherDict
-    return hashDict
+                    hashtagDict[hashtag]["count"] += 1
+                others = hashtags[:i] + hashtags[(i + 1):] # take the list of other hashtags
+                otherDict = hashtagDict[hashtag]["associatedTags"]
+                for other in others: 
+                    other = other.lower()
+                    if other != "":
+                        if other not in otherDict: # add other hashtags to associated hashtags or increment
+                             otherDict[other] = 1
+                        else:
+                             otherDict[other] += 1
+                hashtagDict[hashtag]["associatedTags"] = otherDict
+    return hashtagDict
 
 
 # add to alignment and find the highest class
@@ -154,38 +173,53 @@ def shareHashtagAlignments(h, voteDirection, hashtagDict):
 
 # could be informative to compare how many class reassignments occurred in each direction
 def assignHashtagClasses(hashtagDict):
-    reassignments = list()
-    reassignments[LEFT] = list()
-    reassignments[NEUT] = list()
-    reassignments[RIGHT] = list()
+    reassignments = [
+        [   
+            0,
+            0,
+            0
+        ], # LEFT
+        [
+            0,
+            0,
+            0
+        ], # NEUT
+        [
+            0,
+            0,
+            0
+        ]  # RIGHT
+    ]
     origDir = NEUT
 
     for hashtag in hashtagDict:
         votes = hashtagDict[hashtag]["alignment"]
-        origClass = hashtagDict[hashtag]["class"]
+        origClass = hashtagDict[hashtag]["class"] + 1 # really need to consolidate PRO/UNK/ANT and LEFT/NEUT/RIGHT
         if votes[RIGHT] > votes[LEFT]:
             hashtagDict[hashtag]["class"] = PRO
+            reassignments[origClass][RIGHT] += 1
         elif votes[LEFT] > votes[RIGHT]:
             hashtagDict[hashtag]["class"] = ANT
+            reassignments[origClass][LEFT] += 1
         else:
             hashtagDict[hashtag]["class"] = UNK
-
-        reassignments[origClass][hashtagDict[hashtag]["class"]] += 1
+            reassignments[origClass][NEUT] += 1
 
     return hashtagDict, reassignments
 
 def printReassignments(reassignments):
-    print "Stayed Anti:", reassignments[ANT][ANT]
-    print "Anti -> Neutral:", reassignments[ANT][UNK]
-    print "Anti -> Pro:", reassignments[ANT][PRO]
+    print ""
+    print "Stayed Anti:", reassignments[LEFT][LEFT]
+    print "Anti -> Neutral:", reassignments[LEFT][NEUT]
+    print "Anti -> Pro:", reassignments[LEFT][RIGHT]
 
-    print "Neutral -> Anti:", reassignments[UNK][ANT]
-    print "Stayed Neutral:", reassignments[UNK][UNK]
-    print "Neutral -> Pro:", reassignments[UNK][PRO]
+    print "Neutral -> Anti:", reassignments[NEUT][LEFT]
+    print "Stayed Neutral:", reassignments[NEUT][NEUT]
+    print "Neutral -> Pro:", reassignments[NEUT][RIGHT]
 
-    print "Pro -> Anti:", reassignments[PRO][ANT]
-    print "Pro -> Neutral:", reassignments[PRO][NEUT]
-    print "Stayed Pro:", reassignments[PRO][PRO]
+    print "Pro -> Anti:", reassignments[RIGHT][LEFT]
+    print "Pro -> Neutral:", reassignments[RIGHT][NEUT]
+    print "Stayed Pro:", reassignments[RIGHT][RIGHT]
 
 
 if __name__ == '__main__':

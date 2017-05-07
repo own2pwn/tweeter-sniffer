@@ -45,13 +45,13 @@ def main():
     print "{} unique users initially present in dataset of {} tweets\n".format(len(uniqueUsers), foundLen)
 
     allTrumpTweets = []
-    nontrumpHistories = []
+    nontopicHistories = []
     profiles = []
 
     for n, uu in enumerate(uniqueUsers):
         tweets = []
         trump = []
-        nontrump = []
+        nontopic = []
 
         # need int id to pull by user ids
         uu = int(uu)
@@ -78,20 +78,20 @@ def main():
                 tweetDict['class'] = UNK
                 trump.append(tweetDict)
             else:
-                nontrump.append(tweet['text'])
+                nontopic.append(tweet['text'])
 
-        nontrumpLen = len(nontrump)
-        nontrumpPerc = nontrumpLen / float(tweetLen)
-        if nontrumpPerc < MINIMUM_NONTRUMP_PERC:
-            print "User #{} (id:{}) removed because only {}% of tweet history does not mention {}\n".format(n + 1, uu, "{0:.2f}".format(nontrumpPerc * 100), TOPIC)
+        nontopicLen = len(nontopic)
+        nontopicPerc = nontopicLen / float(tweetLen)
+        if nontopicPerc < MINIMUM_NONTOPIC_PERC:
+            print "User #{} (id:{}) removed because only {}% of tweet history does not mention {}\n".format(n + 1, uu, "{0:.2f}".format(nontopicPerc * 100), TOPIC)
             continue
 
         allTrumpTweets.extend(trump)
 
         historyDict = dict()
         historyDict['userId'] = uu
-        historyDict['tweetTexts'] = nontrump
-        nontrumpHistories.append(historyDict)
+        historyDict['tweetTexts'] = nontopic
+        nontopicHistories.append(historyDict)
 
         trumpLen = len(trump)
         userDict = dict()
@@ -105,7 +105,7 @@ def main():
         print "ID:", uu
         print "Screen name:", screenName
         print trumpLen, "trump tweets"
-        print nontrumpLen, "nontrump tweets\n"
+        print "{} tweets unrelated to {}\n".format(nontopicLen, TOPIC)
 
         time.sleep(15) # include delay between every user
 
@@ -115,14 +115,14 @@ def main():
         json.dump(allTrumpTweets, file, indent=4, separators=(',', ': '))
 
     with codecs.open(historyJson, "w+", "utf-8") as file:
-        json.dump(nontrumpHistories, file, indent=4, separators=(',', ': '))
+        json.dump(nontopicHistories, file, indent=4, separators=(',', ': '))
 
     with codecs.open(userJson, "w+", "utf-8") as file:
         json.dump(profiles, file, indent=4, separators=(',', ': '))
 
 
 # output:   allTrumpTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...], 
-#           nontrumpHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
+#           nontopicHistories = [(user 1 id, [tweet 1 text, tweet 2 text, ...]), ...],
 #           profiles = [(user 1 id, user 1 screen_name, user alignment, user class)]
 
 # pull tweet history and screen_name from last 7 days: (screen_name, list of dependent tweet tuple (tweet id, text))

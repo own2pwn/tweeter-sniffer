@@ -17,7 +17,7 @@ def main():
 
     # for now ignore case of whole file, best is to just update format from start so this script is unnecessary
     endingPartialNumber = int(args.lastPartialNumber)
-    ordinal = "{0:0" + len(args.lastPartialNumber) + "f}"
+    ordinal = "{" + ":0{}d".format(len(args.lastPartialNumber)) + "}"
 
     currentNum = 1 
     while currentNum < endingPartialNumber:
