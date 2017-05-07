@@ -21,6 +21,9 @@ import operator
 # all trumpTweet dicts + user dicts -> classify users
 # all user dicts + history dicts -> produce dataset
 
+def giveCount(hashtag, hashtagDict):
+    return 
+
 
 def main():
     parser = argparse.ArgumentParser()
