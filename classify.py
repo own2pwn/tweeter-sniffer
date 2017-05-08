@@ -87,11 +87,11 @@ def main():
 
     screenNameDict = { users[user]["screenName"]: users[user]["class"] for user in users }
  
-    allTopicTweets = [ auxiliaryAssignment(tweetDict[tweet], screenNameDict) for tweet in tweetDict ]
-    printClassDistribution(allTopicTweets, "trump tweets")
+    # allTopicTweets = [ auxiliaryAssignment(tweetDict[tweet], screenNameDict) for tweet in tweetDict ]
+    # printClassDistribution(allTopicTweets, "trump tweets")
  
-    usersList = [ userClassAssignment(user, tweetDict) for user in usersList ]
-    printClassDistribution(usersList, "users")
+    # usersList = [ userClassAssignment(user, tweetDict) for user in usersList ]
+    # printClassDistribution(usersList, "users")
  
     categorizedHistories = []
 
