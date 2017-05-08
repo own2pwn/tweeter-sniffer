@@ -1,7 +1,6 @@
-# tweeter-sniffer
-CMPE 188 project
+CMPE 188 Tweeter-Sniffer
 
-Dataset generation scripts
+Part A. Dataset generation scripts (Megumi Page)
 
 1. tweetSniffer.py
 
@@ -15,18 +14,22 @@ Splits the topic-based query results into smaller files for concurrent querying 
 
 Queries Twitter for information related to each user who was found tweeting about the topic. Information is user screen name and entire tweet history for the last 7 days (TwitterSearch library constraint).
 
-4. cleanHashtags.py, and other cleaning scripts
-
-Cleans up the intermediate lists of dictionaries for easier processing.
-
-5. generateHashtagDict.py
+4. generateHashtagDict.py
 
 Creates a dictionary of hashtags with associated hashtags and various frequencies and prompts the user to start teaching the dictionary the positivity/negativity of the tags relative to the topic.
 
-6. joinHashtagDicts.py
+5. classify.py
 
-Joins the hashtag dicts for the smaller files for culmulative local classification.
+Classifies tweets and tweeters using the hashtag dictionary (primary).
+Also supposed to by mentioned screen names (auxiliary) after initial user class assignment, but that didn't quite happen.
 
-7. classify.py
+*6. helper scripts
 
-Classifies tweets and tweeters using the hashtag dictionary (primary) and mentioned screen names (auxiliary)
+Reorganize and clean data for easier processing as necessary between other scripts
+
+
+
+Part B. Machine learning algorithms
+
+Random forest: Aaron Moffitt
+Naive Bayes: Erick Mena
