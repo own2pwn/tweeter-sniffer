@@ -5,7 +5,7 @@ import re
 import json
 import os
 import argparse
-from snifferCommons *
+from snifferCommons import *
  
 def main():
  
@@ -29,7 +29,7 @@ def main():
     endingPartialNumber = int(args.lastPartialNumber)
     ordinal = "{" + ":0{}d".format(len(args.lastPartialNumber)) + "}"
 
-    allTopicTweets = dict()
+    allTopicTweets = list()
     histories = dict()
     users = dict()
 
@@ -40,7 +40,7 @@ def main():
 
         if os.path.exists(topicJson) and os.path.exists(topicJson) and os.path.exists(topicJson):
             with codecs.open(topicJson, "r", "utf-8") as file:
-                allTopicTweets.update(json.load(file))
+                allTopicTweets.extend(json.load(file))
          
             with codecs.open(historyJson, "r", "utf-8") as file:
                 histories.update(json.load(file))
@@ -53,7 +53,6 @@ def main():
             exit()
 
         currentNum += 1
-
  
         # read in dict of { hashtag: class, hashtag: class, ... }
         # print the statistics for the dict:
@@ -71,33 +70,37 @@ def main():
         # do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via 
 
 
-    allTopicTweets = [ primaryAssignment(tweet, classifiedHashtags) for tweet in allTopicTweets ]
-    printClassDistribution(allTopicTweets, "trump tweets")
- 
-    users = [ userClassAssignment(user, allTopicTweets) for user in users ]
-    printClassDistribution(users, "users")
+    hashtagDict = { hashtag: classifiedHashtags[hashtag]["class"] for hashtag in classifiedHashtags }
 
-    screenNameDict = { user["screenName"]: user["class"] for user in users }
- 
-    allTopicTweets = [ auxiliaryAssignment(tweet, screenNameDict) for tweet in allTopicTweets ]
+    allTopicTweets = [ primaryAssignment(tweet, hashtagDict) for tweet in allTopicTweets ]
     printClassDistribution(allTopicTweets, "trump tweets")
  
-    users = [ userClassAssignment(user, allTopicTweets) for user in users ]
-    printClassDistribution(users, "users")
+    usersList = list()
+    for user in users:
+        users[user].update({"userId": user})
+        usersList.append(users[user])
+
+    tweetDict = { int(tweet["userId"]): tweet for tweet in allTopicTweets }
+
+    usersList = [ userClassAssignment(user, tweetDict) for user in usersList ]
+    printClassDistribution(usersList, "users")
+
+    screenNameDict = { users[user]["screenName"]: users[user]["class"] for user in users }
+ 
+    allTopicTweets = [ auxiliaryAssignment(tweetDict[tweet], screenNameDict) for tweet in tweetDict ]
+    printClassDistribution(allTopicTweets, "trump tweets")
+ 
+    usersList = [ userClassAssignment(user, tweetDict) for user in usersList ]
+    printClassDistribution(usersList, "users")
  
     categorizedHistories = []
 
-    for user in users:
-        history = []
-        for item in histories:
-            if item["userId"] == user["userId"]:
-                history = item["tweetTexts"]
-                break
+    for user in usersList:
         categorizedHistories.append({
             "class": user["class"],
-            "tweets": history
-       }) # only user class and nontrump history
- 
+            "tweets": histories[user["userId"]]["tweetTexts"]
+        }) # only user class and nontrump history
+     
     with codecs.open(generateOutputFileName(baseName), "w+", "utf-8") as file:
          json.dump(categorizedHistories, file, indent=4, separators=(',', ': '))
  
@@ -113,12 +116,14 @@ def primaryAssignment(tweet, hashtagDict):
 
 
 def auxiliaryAssignment(tweet, screennames):
-    if tweet["class"] == UNK:
-        tweet = vote(tweet, "mentionedScreenNames", screennames)
+    tweet = vote(tweet, "mentionedScreenNames", screennames)
     return tweet
 
 
 def vote(item, voterKey, voterDict):
+    if "alignment" not in item: # should have added to all dicts and didn't
+        item["alignment"] = [0, 0, 0]
+
     for voter in item[voterKey]:
         voter = voter.lower()
         if voter in voterDict:
@@ -141,43 +146,49 @@ def vote(item, voterKey, voterDict):
 
 
 # DP: Allow unassigned to be an end category or prioritize pro/anti? For now, let it be a category
-def userClassAssignment(user, tweetList):
+def userClassAssignment(user, tweetDict):
     # allTopicTweets = [(tweet 1 id, tweet 1 text, tweeter user id, mentioned screen_names, hashtags, tweet class), ...]
-    votes = user["alignment"]
-    for tweet in tweetList: # TODO: faster if I make this a dict with { user id: [tweet1, tweet2, ...] , ... }
-        if user["userId"]:
-            if tweet["class"] == PRO:
-                votes[RIGHT] += 1
-                votes[NEUT] -= 1
-            elif tweet["class"] == ANT:
-                votes[LEFT] += 1
-                votes[NEUT] -= 1
+    if "alignment" in user:
+        votes = user["alignment"]
+    else: # should have added to all dicts and didn't
+        votes = [0, 0, 0]
 
-    if votes[RIGHT] > votes[LEFT]:
-        tweet["class"] = PRO
-    elif votes[RIGHT] < votes[LEFT]:
-        tweet["class"] = ANT
-    else:
-        tweet["class"] = UNK
+    userId = int(user["userId"])
+
+    if userId in tweetDict:  # there IS possibility that user cannot be found due to differences in querying times between steps!
+        if tweetDict[userId]["class"] == PRO:
+            votes[RIGHT] += 1
+            votes[NEUT] -= 1
+        elif tweetDict[userId]["class"] == ANT:
+            votes[LEFT] += 1
+            votes[NEUT] -= 1
+
+        if votes[RIGHT] > votes[LEFT]:
+            user["class"] = PRO
+        elif votes[RIGHT] < votes[LEFT]:
+            user["class"] = ANT
+        else:
+            user["class"] = UNK
 
     user["alignment"] = votes
     return user
 
  
 def printClassDistribution(items, description):
-     distribution = [0, 0, 0]
+    distribution = [0, 0, 0]
  
     for item in items:
-        if item["class"] == ANT:
-            distribution[LEFT] += 1
-        elif item["class"] == PRO:
-            distribution[RIGHT] += 1
-         else:
-            distribution[NEUT] += 1
+        if item is not None:
+            if item["class"] == ANT:
+                distribution[LEFT] += 1
+            elif item["class"] == PRO:
+                distribution[RIGHT] += 1
+            else:
+                distribution[NEUT] += 1
  
-    print "Class distribution of", description, ":"
-    print distribution[LEFT], distribution[NEUT], distribution[RIGHT]
- 
+    print "Class distribution of {}:".format(description)
+    print distribution
+
 if __name__ == '__main__':
     main()
 
