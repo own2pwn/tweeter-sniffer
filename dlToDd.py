@@ -21,54 +21,34 @@ def main():
 
     currentNum = 1
     while currentNum <= endingPartialNumber:
+        print "Next ordinal:", ordinal.format(currentNum)
         topicJson, historyJson, userJson = generateOldIntermediateFileNames(baseName + ordinal.format(currentNum))
-        newTopicJson, newHistoryJson, newUserJson  = generateNewIntermediateFileNames(baseName + ordinal.format(currentNum))
 
-        if os.path.exists(historyJson):
-            with codecs.open(historyJson, "r", "utf-8") as file:
-                fileList = json.load(file)
+        for dataJson in [ historyJson, userJson ]:
+            if os.path.exists(dataJson):
+                print "Working on new dict for", dataJson
+                with codecs.open(dataJson, "r", "utf-8") as file:
+                    fileList = json.load(file)
 
-            # do need to look at all users at once? only when using to vote for tweets, so search through each file then
-            #       deduping was done jankily, make sure deduping is included in flow of scripts -> rawSplit.py
-            # do need to look at all user histories at once? search through each file by user id when necesary
-            #   reformat histories to be dict of userId => [texts]
-            #            users to be     dict of userId => [screen_name, alignment, class]
-            #            trumpTweets     dict of userId => { tweetId => text, tweetId => text }
-            # do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via 
-            masterFileDict = dict()
-            for item in fileList:
-                userId = item.pop("userId")
-                masterFileDict[userId] = item
-                print "Added {} to dict for {}".format(userId, historyJson)
-            
-            with codecs.open(newHistoryJson, "w+", "utf-8") as file:
-                json.dump(masterFileDict, file, indent=4, separators=(',', ': '))
-        else:
-            print "Error:", historyJson, "does not exist in current directory"
-            exit()
+                # do need to look at all users at once? only when using to vote for tweets, so search through each file then
+                #       deduping was done jankily, make sure deduping is included in flow of scripts -> rawSplit.py
+                # do need to look at all user histories at once? search through each file by user id when necesary
+                #   reformat histories to be dict of userId => [texts]
+                #            users to be     dict of userId => [screen_name, alignment, class]
+                #            trumpTweets     dict of userId => { tweetId => text, tweetId => text }
+                # do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via 
+                masterFileDict = dict()
 
-        if os.path.exists(userJson):
-            with codecs.open(userJson, "r", "utf-8") as file:
-                fileList = json.load(file)
-
-            # do need to look at all users at once? only when using to vote for tweets, so search through each file then
-            #       deduping was done jankily, make sure deduping is included in flow of scripts -> rawSplit.py
-            # do need to look at all user histories at once? search through each file by user id when necesary
-            #   reformat histories to be dict of userId => [texts]
-            #            users to be     dict of userId => [screen_name, alignment, class]
-            #            trumpTweets     dict of userId => { tweetId => text, tweetId => text }
-            # do need to look at all trump tweets at once? loop through files when voting via hashtags, when voting for users, when auxiliary voting via 
-            masterFileDict = dict()
-            for item in fileList:
-                userId = item.pop("userId")
-                masterFileDict[userId] = item
-                print "Added {} to dict for {}".format(userId, userJson)
-            
-            with codecs.open(newUserJson, "w+", "utf-8") as file:
-                json.dump(masterFileDict, file, indent=4, separators=(',', ': '))
-        else:
-            print "Error:", userJson, "does not exist in current directory"
-            exit()
+                if isinstance(fileList, list) and isinstance(fileList[0], dict):
+                    for item in fileList:
+                        userId = item.pop("userId")
+                        masterFileDict[userId] = item
+                        # print "Added {} to dict for {}".format(userId, dataJson)
+                    with codecs.open(dataJson, "w+", "utf-8") as file:
+                        json.dump(masterFileDict, file, indent=4, separators=(',', ': '))
+            else:
+                print "Error: {} does not exist in current directory".format(dataJson)
+                exit()
 
         currentNum += 1
 
